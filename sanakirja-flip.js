@@ -15,7 +15,7 @@ async function fetchData(url) {
       const response = await fetch(url, { signal });
       if (response.ok) {
         const data = await response.json();
-        clearTimeout(timeoutId);
+        clearTimeout(timeoutId);        
         return data;
       }
     } catch (error) {
@@ -24,8 +24,8 @@ async function fetchData(url) {
       } else {
         console.log(`Attempt ${attempt + 1} failed: ${error.message}`);
       }
-      clearTimeout(timeoutId);
     }
+    clearTimeout(timeoutId);
 
     await new Promise((resolve) => setTimeout(resolve, waitTime));
   }
