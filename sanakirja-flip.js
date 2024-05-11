@@ -1,25 +1,34 @@
-function fetchData(url) {
+async function fetchData(url) {
   const maxAttempts = 3;
   const timeout = 60000; // 60 seconds
-  let attempts = 0;
+  const waitTime = 1000; // 1 second
 
-  return new Promise((resolve, reject) => {
-    function makeRequest() {
-      attempts++;
-      fetch(url, { timeout })
-        .then((response) => response.json())
-        .then((data) => resolve(data))
-        .catch((error) => {
-          if (attempts < maxAttempts) {
-            console.log(attempts);
-            setTimeout(makeRequest, 1000); // wait for 1 second before retrying
-          } else {
-            reject(error);
-          }
-        });
+  for (let attempt = 0; attempt < maxAttempts; attempt++) {
+    const controller = new AbortController();
+    const signal = controller.signal;
+
+    setTimeout(() => {
+      controller.abort();
+    }, timeout);
+
+    try {
+      const response = await fetch(url, { signal });
+      if (response.ok) {
+        const data = await response.json();
+        return data;
+      }
+    } catch (error) {
+      if (error.name === "AbortError") {
+        console.log(`Attempt ${attempt + 1} timed out`);
+      } else {
+        console.log(`Attempt ${attempt + 1} failed: ${error.message}`);
+      }
     }
-    makeRequest();
-  });
+
+    await new Promise((resolve) => setTimeout(resolve, waitTime));
+  }
+
+  throw new Error("Failed to retrieve data after 3 attempts");
 }
 
 window.onload = function () {
