@@ -1,13 +1,13 @@
 async function fetchData(url) {
   const maxAttempts = 3;
-  const timeout = 60000; // 60 seconds
+  const timeout = 6000; // 6 seconds
   const waitTime = 1000; // 1 second
 
   for (let attempt = 0; attempt < maxAttempts; attempt++) {
     const controller = new AbortController();
     const signal = controller.signal;
 
-    setTimeout(() => {
+    var timeoutId=setTimeout(() => {
       controller.abort();
     }, timeout);
 
