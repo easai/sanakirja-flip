@@ -33,6 +33,22 @@ async function fetchData(url) {
   throw new Error("Failed to retrieve data after 3 attempts");
 }
 
+function setData(){
+  var fi = "-";
+  var en = "-";
+  fetchData("https://sanakirja.pythonanywhere.com/api/nrand/5")
+    .then((data) => {
+      for (i = 0; i < 5; i++) {
+        fi = data[i]["expression"];
+        en = data[i]["description"];
+        head[i].innerHTML = fi;
+        tail[i].innerHTML = en;
+        console.log(data["vi"] + ": " + data["en"]);
+      }
+    })
+    .catch((error) => console.error(error));
+}
+
 window.onload = function () {
   // Create kard list
   var kard_list = document.getElementsByClassName("kard-list")[0];
@@ -63,19 +79,7 @@ window.onload = function () {
   var tail = document.getElementsByClassName("tail");
 
   // Retrieve data from API
-  var fi = "-";
-  var en = "-";
-  fetchData("https://sanakirja.pythonanywhere.com/api/nrand/5")
-    .then((data) => {
-      for (i = 0; i < 5; i++) {
-        fi = data[i]["expression"];
-        en = data[i]["description"];
-        head[i].innerHTML = fi;
-        tail[i].innerHTML = en;
-        console.log(data["vi"] + ": " + data["en"]);
-      }
-    })
-    .catch((error) => console.error(error));
+  setData();
 
   // Set click actions
   for (i = 0; i < 5; i++) {
