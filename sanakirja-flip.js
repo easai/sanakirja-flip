@@ -82,6 +82,22 @@ function toggleCard(card) {
   }
 }
 
+function setData(){
+  var fi = "-";
+  var en = "-";
+  fetchData("https://sanakirja.pythonanywhere.com/api/nrand/5")
+    .then((data) => {
+      for (i = 0; i < 5; i++) {
+        fi = data[i]["expression"];
+        en = data[i]["description"];
+        head[i].innerHTML = fi;
+        tail[i].innerHTML = en;
+        console.log(data["vi"] + ": " + data["en"]);
+      }
+    })
+    .catch((error) => console.error(error));
+}
+
 window.onload = function () {
   // Create a container for the cards
   const cardList = document.getElementsByClassName("card-list")[0];
