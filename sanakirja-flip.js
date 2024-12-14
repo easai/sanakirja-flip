@@ -1,93 +1,114 @@
-async function fetchData(url) {
+function fetchData(url) {
+  // Define values for attempts and timeout
   const maxAttempts = 3;
-  const timeout = 6000; // 6 seconds
-  const waitTime = 1000; // 1 second
+  const timeout = 60000; // 60 seconds
+  let attempts = 0;
 
-  for (let attempt = 0; attempt < maxAttempts; attempt++) {
-    const controller = new AbortController();
-    const signal = controller.signal;
+  return new Promise((resolve, reject) => {
+      function makeRequest() {
+          // Increment the attempt counter
+          attempts++;
+          const controller = new AbortController(); 
+          const signal = controller.signal; 
+          const timeoutId = setTimeout(() => { controller.abort(); }, timeout);
 
-    var timeoutId=setTimeout(() => {
-      controller.abort();
-    }, timeout);
-
-    try {
-      const response = await fetch(url, { signal });
-      if (response.ok) {
-        const data = await response.json();
-        clearTimeout(timeoutId);        
-        return data;
+          // HTTP request with timeout handling
+          fetch(url, { signal })
+              .then((response) => { 
+                  clearTimeout(timeoutId); 
+                  if (!response.ok) { 
+                      throw new Error(`HTTP error! status: ${response.status}`); 
+                  } 
+                  return response.json(); 
+              })
+              .then((data) => resolve(data))
+              .catch((error) => { 
+                  clearTimeout(timeoutId); 
+                  // If the number of attempts is less than the limit, retry after a delay
+                  if (attempts < maxAttempts) { 
+                      console.log(`Attempt ${attempts} failed. Retrying...`);
+                      setTimeout(makeRequest, 1000);
+                  } else { 
+                      // If all attempts fail, reject the promise
+                      reject(new Error(`Failed to fetch data after ${maxAttempts} attempts.`));                    
+                  }
+              });
       }
-    } catch (error) {
-      if (error.name === "AbortError") {
-        console.log(`Attempt ${attempt + 1} timed out`);
-      } else {
-        console.log(`Attempt ${attempt + 1} failed: ${error.message}`);
-      }
-    }
-    clearTimeout(timeoutId);
 
-    await new Promise((resolve) => setTimeout(resolve, waitTime));
+      // Initiate the request
+      makeRequest();
+  });
+}
+
+// Function to handle the creation of a single card
+function createCard() {
+  const card = document.createElement("div");
+  card.className = "card";
+  card.style.display = "block";
+
+  // Create the card header and footer
+  const head = document.createElement("div");
+  head.className = "head";
+  head.innerHTML = "-";
+  head.style.display = "block";
+
+  const footer = document.createElement("div");
+  footer.className = "tail";
+  footer.innerHTML = "-";
+  footer.style.display = "none";
+
+  // Add the header and footer to the card
+  card.appendChild(head);
+  card.appendChild(footer);
+
+  return card;
+}
+
+// Event handler to toggle the card display
+function toggleCard(card) {
+  // Toggle the "flip" class for animation
+  card.classList.toggle("flip");
+
+  // Toggle the display of the header and footer
+  const head = card.querySelector(".head");
+  const footer = card.querySelector(".tail");
+
+  if (footer.style.display === "none") {
+      footer.style.display = "block";
+      head.style.display = "none";
+  } else {
+      footer.style.display = "none";
+      head.style.display = "block";
   }
-
-  throw new Error("Failed to retrieve data after 3 attempts");
 }
 
 window.onload = function () {
-  // Create kard list
-  var kard_list = document.getElementsByClassName("kard-list")[0];
-  for (i = 0; i < 5; i++) {
-    var kard = document.createElement("kard");
-    kard.id = "kard";
-    kard.className = "kard";
-    kard.style.display = "block";
-    kard_list.appendChild(kard);
+  // Create a container for the cards
+  const cardList = document.getElementsByClassName("card-list")[0];
 
-    var head = document.createElement("head");
-    head.id = "head";
-    head.className = "head";
-    head.innerHTML = "-";
-    head.style.display = "block";
-    kard.appendChild(head);
-    var tail = document.createElement("tail");
-    tail.id = "tail";
-    tail.className = "tail";
-    tail.innerHTML = "-";
-    tail.style.display = "none";
-    kard.appendChild(tail);
-  }
-
-  // Retrieve kard, head, and tail elements
-  var kard = document.getElementsByClassName("kard");
-  var head = document.getElementsByClassName("head");
-  var tail = document.getElementsByClassName("tail");
-
-  // Retrieve data from API
-  var fi = "-";
-  var en = "-";
+  // Fetch data from the API
   fetchData("https://sanakirja.pythonanywhere.com/api/nrand/5")
-    .then((data) => {
-      for (i = 0; i < 5; i++) {
-        fi = data[i]["expression"];
-        en = data[i]["description"];
-        head[i].innerHTML = fi;
-        tail[i].innerHTML = en;
-        console.log(data["vi"] + ": " + data["en"]);
-      }
-    })
-    .catch((error) => console.error(error));
+      .then((data) => {
+          // Create cards for each data item
+          for (let i = 0; i < data.length; i++) {
+              const card = createCard();
+              cardList.appendChild(card);
 
-  // Set click actions
-  for (i = 0; i < 5; i++) {
-    kard[i].onclick = function () {
-      this.classList.toggle("flip");
-      if (this.children[1].style.display === "none") {
-        this.children[1].style.display = "block";
-        this.children[0].style.display = "none";
-      } else {
-        this.children[1].style.display = "none";
-        this.children[0].style.display = "block";
-      }
-    };
-  }
+              const head = card.querySelector(".head");
+              const footer = card.querySelector(".tail");
+
+              // Fill the card with the fetched data
+              head.innerHTML = data[i]["vi"];
+              footer.innerHTML = data[i]["en"];
+          }
+
+          // Add a click event handler for each card
+          const cards = cardList.querySelectorAll(".card");
+          cards.forEach((card) => {
+              card.addEventListener("click", () => {
+                  toggleCard(card);
+              });
+          });
+      })
+      .catch((error) => console.error("Error fetching data:", error));
 };

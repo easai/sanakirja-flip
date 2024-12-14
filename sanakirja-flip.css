@@ -1,7 +1,7 @@
-.kard-list {
+.card-list {
   margin: 1rem 1rem;
 }
-.kard {
+.card {
   position: relative;
   animation: all 2.5s;
   perspective: 1000;
@@ -19,6 +19,6 @@
     sans-serif;
   margin: 0.5rem 0;
 }
-.kard.flip {
+.card.flip {
   transform: rotateY(360deg);
 }
