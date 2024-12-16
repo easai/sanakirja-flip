@@ -8,7 +8,7 @@ Sanakirja is a Finnish dictionary for learners.
 Add a DIV tag in the HTML page.
 <pre>
 <code>
-  &lt;div class="kard-list">&lt;/div>
+  &lt;div class="card-list">&lt;/div>
 </code>
 </pre>
 Add the following in the header section of the HTML page.
